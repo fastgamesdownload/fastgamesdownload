@@ -70,13 +70,13 @@ const Navbar: React.FC = () => {
                 </div>
               </div>
 
-              {/* 2. Planos */}
-              <Link to="/subscription" className="text-zinc-300 hover:text-red-500 px-3 py-2 rounded-md text-sm font-medium transition-colors">{t.plans}</Link>
-
-              {/* 3. Biblioteca (Conditional) */}
+              {/* 2. Biblioteca (Conditional) */}
               {user?.library.length ? (
                 <Link to="/library" className="text-zinc-300 hover:text-red-500 px-3 py-2 rounded-md text-sm font-medium transition-colors">{t.library}</Link>
               ) : null}
+
+              {/* 3. Planos */}
+              <Link to="/subscription" className="text-zinc-300 hover:text-red-500 px-3 py-2 rounded-md text-sm font-medium transition-colors">{t.plans}</Link>
 
               {/* 4. Contato */}
               <Link to="/contact" className="text-zinc-300 hover:text-red-500 px-3 py-2 rounded-md text-sm font-medium transition-colors">{t.contact}</Link>
@@ -177,11 +177,11 @@ const Navbar: React.FC = () => {
               </div>
             </div>
 
-            {/* 2. Planos */}
-            <Link to="/subscription" className="text-zinc-300 hover:text-red-500 block px-3 py-2 rounded-md text-base font-medium" onClick={() => setIsMobileMenuOpen(false)}>{t.plans}</Link>
-
-            {/* 3. Biblioteca */}
+            {/* 2. Biblioteca */}
              <Link to="/library" className="text-zinc-300 hover:text-red-500 block px-3 py-2 rounded-md text-base font-medium" onClick={() => setIsMobileMenuOpen(false)}>{t.library}</Link>
+
+            {/* 3. Planos */}
+            <Link to="/subscription" className="text-zinc-300 hover:text-red-500 block px-3 py-2 rounded-md text-base font-medium" onClick={() => setIsMobileMenuOpen(false)}>{t.plans}</Link>
              
              {/* 4. Contato */}
              <Link to="/contact" className="text-zinc-300 hover:text-red-500 block px-3 py-2 rounded-md text-base font-medium" onClick={() => setIsMobileMenuOpen(false)}>{t.contact}</Link>

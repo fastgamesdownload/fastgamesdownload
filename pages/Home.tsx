@@ -25,8 +25,12 @@ const Home: React.FC = () => {
 
   const myGames = user ? games.filter(g => user.library.includes(g.id)) : [];
 
-  // Regra de visibilidade da biblioteca na home: Se tiver jogos OU se for Administrador
-  const showLibrarySection = user && (myGames.length > 0 || user.role === 'admin') && !searchQuery && selectedCategory === 'Todos';
+  // Regra de visibilidade da biblioteca na home: Mostrar para Admin OU se o usuário tiver jogos OU se for VIP/Premium
+  const isSubscriber = user?.status === 'VIP' || user?.status === 'Premium';
+  const isAdmin = user?.role === 'admin';
+  const hasGames = myGames.length > 0;
+  
+  const showLibrarySection = user && (isAdmin || isSubscriber || hasGames) && !searchQuery && selectedCategory === 'Todos';
 
   return (
     <div className="min-h-screen pb-20">
@@ -45,7 +49,7 @@ const Home: React.FC = () => {
                    </div>
                    <div>
                      <h2 className="text-2xl font-bold text-white">Sua Biblioteca</h2>
-                     <p className="text-zinc-400 text-sm">{user.role === 'admin' ? 'Acesso Administrativo' : 'Continue de onde parou'}</p>
+                     <p className="text-zinc-400 text-sm">{isAdmin ? 'Acesso Administrativo Total' : 'Continue de onde parou'}</p>
                    </div>
                  </div>
                  <Link to="/library" className="text-sm text-red-500 hover:text-red-400 font-medium">Ver todos</Link>
@@ -64,7 +68,9 @@ const Home: React.FC = () => {
                     </div>
                   )) : (
                     <div className="flex-shrink-0 w-full py-10 text-center border border-dashed border-zinc-800 rounded-xl">
-                       <p className="text-zinc-500 text-sm">Sua biblioteca administrativa está vazia. Adicione jogos para testar.</p>
+                       <p className="text-zinc-500 text-sm">
+                         {isAdmin ? 'Sua biblioteca administrativa está vazia. Adicione jogos para testar o sistema.' : 'Você ainda não possui jogos na sua biblioteca.'}
+                       </p>
                     </div>
                   )}
                </div>

@@ -24,8 +24,12 @@ const Navbar: React.FC = () => {
 
   const t = translations[language];
 
-  // Regra: Mostrar biblioteca se tiver itens OU se for Administrador
-  const showLibraryLink = user && (user.library.length > 0 || user.role === 'admin');
+  // Regra de Acesso: Mostrar biblioteca se for Admin OU se for VIP/Premium OU se tiver comprado algum jogo individualmente
+  const isSubscribed = user?.status === 'VIP' || user?.status === 'Premium';
+  const hasGames = user && user.library.length > 0;
+  const isAdmin = user?.role === 'admin';
+  
+  const showLibraryLink = user && (isAdmin || isSubscribed || hasGames);
 
   return (
     <nav className="sticky top-0 z-50 w-full bg-black/80 backdrop-blur-md border-b border-zinc-800">

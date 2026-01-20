@@ -8,30 +8,37 @@ interface HeroCarouselProps {
   games: Game[];
 }
 
-const HeroCarousel: React.FC<HeroCarouselProps> = ({ games }) => {
+const HeroCarousel: React.FC = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const { user } = useStore();
+  const { user, games } = useStore();
+
+  const featuredGames = games.filter(g => g.isFeatured).length > 0 
+    ? games.filter(g => g.isFeatured) 
+    : games.slice(0, 3);
 
   useEffect(() => {
-    if (games.length <= 1) return;
+    if (featuredGames.length <= 1) return;
     const timer = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % games.length);
+      setCurrentIndex((prev) => (prev + 1) % featuredGames.length);
     }, 10000); 
     return () => clearInterval(timer);
-  }, [games.length]);
+  }, [featuredGames.length]);
 
-  const nextSlide = () => setCurrentIndex((prev) => (prev + 1) % games.length);
-  const prevSlide = () => setCurrentIndex((prev) => (prev - 1 + games.length) % games.length);
+  const nextSlide = () => setCurrentIndex((prev) => (prev + 1) % featuredGames.length);
+  const prevSlide = () => setCurrentIndex((prev) => (prev - 1 + featuredGames.length) % featuredGames.length);
 
-  if (games.length === 0) return null;
+  if (featuredGames.length === 0) return null;
 
   return (
     <div className="relative h-[500px] md:h-[600px] w-full overflow-hidden group">
-      {games.map((game, index) => {
+      {featuredGames.map((game, index) => {
         const isDigital = game.mediaType === 'Digital';
         const isOwned = user?.library.includes(game.id);
-        // Apenas Premium/VIP ou se já possuir o jogo pode baixar diretamente mídia digital
-        const canDownloadDirectly = isDigital && (user?.status === 'Premium' || user?.status === 'VIP' || isOwned);
+        const isAdmin = user?.role === 'admin';
+        const isSubscriber = user?.status === 'Premium' || user?.status === 'VIP';
+        
+        // Acesso de download: Admin OU Assinante OU se já possui o jogo
+        const canDownloadDirectly = isDigital && (isAdmin || isSubscriber || isOwned);
         
         const buttonText = canDownloadDirectly ? 'Baixar Agora' : 'Adicionar ao Carrinho';
         const ButtonIcon = canDownloadDirectly ? Download : ShoppingCart;
@@ -70,7 +77,8 @@ const HeroCarousel: React.FC<HeroCarouselProps> = ({ games }) => {
                   </p>
                   <div className="flex space-x-4">
                      <Link 
-                       to={`/game/${game.id}`}
+                       to={canDownloadDirectly && game.downloadUrl ? game.downloadUrl : `/game/${game.id}`}
+                       target={canDownloadDirectly && game.downloadUrl ? "_blank" : "_self"}
                        className="px-8 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg transition-all transform hover:scale-105 flex items-center shadow-lg shadow-red-900/40"
                      >
                        <ButtonIcon className="w-5 h-5 mr-2" />
@@ -91,7 +99,7 @@ const HeroCarousel: React.FC<HeroCarouselProps> = ({ games }) => {
       })}
 
       {/* Controls */}
-      {games.length > 1 && (
+      {featuredGames.length > 1 && (
         <>
           <button
             onClick={prevSlide}
@@ -108,7 +116,7 @@ const HeroCarousel: React.FC<HeroCarouselProps> = ({ games }) => {
 
           {/* Indicators */}
           <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex space-x-2">
-            {games.map((_, idx) => (
+            {featuredGames.map((_, idx) => (
               <button
                 key={idx}
                 onClick={() => setCurrentIndex(idx)}

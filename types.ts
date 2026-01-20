@@ -9,9 +9,12 @@ export interface Game {
   category: string;
   platform: string;
   videoUrl?: string;
+  downloadUrl?: string;
   screenshots: string[];
   releaseDate: string;
   tags: string[];
+  mediaType?: 'Física' | 'Digital';
+  isFeatured?: boolean;
 }
 
 export interface Plan {

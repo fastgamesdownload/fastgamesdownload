@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ShoppingCart, Gamepad2, Search, User, Menu, X, Globe, Settings, ChevronDown, Mail } from 'lucide-react';
+import { ShoppingCart, Gamepad2, Search, User, Menu, X, Globe, Settings, ChevronDown } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
 import { PLATFORMS } from '../constants';
 
@@ -24,6 +24,9 @@ const Navbar: React.FC = () => {
 
   const t = translations[language];
 
+  // Regra: Mostrar biblioteca se tiver itens OU se for Administrador
+  const showLibraryLink = user && (user.library.length > 0 || user.role === 'admin');
+
   return (
     <nav className="sticky top-0 z-50 w-full bg-black/80 backdrop-blur-md border-b border-zinc-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -46,7 +49,6 @@ const Navbar: React.FC = () => {
           <div className="hidden md:block">
             <div className="ml-10 flex items-baseline space-x-8">
               
-              {/* 1. Plataformas (Dropdown) */}
               <div 
                 className="relative group"
                 onMouseEnter={() => setIsPlatformOpen(true)}
@@ -56,7 +58,6 @@ const Navbar: React.FC = () => {
                   {t.platforms} <ChevronDown className="ml-1 w-4 h-4" />
                 </button>
                 
-                {/* Dropdown Content */}
                 <div className={`absolute left-0 mt-0 w-48 bg-zinc-900 border border-zinc-800 rounded-md shadow-xl py-1 z-50 transition-all duration-200 transform origin-top ${isPlatformOpen ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'}`}>
                   {PLATFORMS.map((platform) => (
                     <Link 
@@ -70,18 +71,14 @@ const Navbar: React.FC = () => {
                 </div>
               </div>
 
-              {/* 2. Biblioteca (Conditional) */}
-              {user?.library.length ? (
+              {showLibraryLink && (
                 <Link to="/library" className="text-zinc-300 hover:text-red-500 px-3 py-2 rounded-md text-sm font-medium transition-colors">{t.library}</Link>
-              ) : null}
+              )}
 
-              {/* 3. Planos */}
               <Link to="/subscription" className="text-zinc-300 hover:text-red-500 px-3 py-2 rounded-md text-sm font-medium transition-colors">{t.plans}</Link>
 
-              {/* 4. Contato */}
               <Link to="/contact" className="text-zinc-300 hover:text-red-500 px-3 py-2 rounded-md text-sm font-medium transition-colors">{t.contact}</Link>
               
-              {/* 5. Configurações (Admin Only) */}
               {user?.role === 'admin' && (
                 <Link to="/admin/settings" className="text-red-400 hover:text-red-300 px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center">
                   <Settings className="w-4 h-4 mr-1" />
@@ -109,8 +106,6 @@ const Navbar: React.FC = () => {
 
           {/* Right Icons */}
           <div className="hidden md:flex items-center space-x-6">
-            
-            {/* Language Selector */}
             <div className="relative">
               <button 
                 onClick={() => setIsLangOpen(!isLangOpen)}
@@ -143,7 +138,6 @@ const Navbar: React.FC = () => {
             </div>
           </div>
 
-          {/* Mobile menu button */}
           <div className="-mr-2 flex md:hidden">
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -155,12 +149,9 @@ const Navbar: React.FC = () => {
         </div>
       </div>
 
-      {/* Mobile Menu */}
       {isMobileMenuOpen && (
         <div className="md:hidden bg-zinc-900 border-b border-zinc-800">
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-            
-            {/* 1. Plataformas */}
             <div className="text-zinc-300 block px-3 py-2 text-base font-medium">
               <span className="text-zinc-500 text-xs uppercase mb-1 block">{t.platforms}</span>
               <div className="pl-4 border-l border-zinc-800 space-y-1">
@@ -177,16 +168,14 @@ const Navbar: React.FC = () => {
               </div>
             </div>
 
-            {/* 2. Biblioteca */}
-             <Link to="/library" className="text-zinc-300 hover:text-red-500 block px-3 py-2 rounded-md text-base font-medium" onClick={() => setIsMobileMenuOpen(false)}>{t.library}</Link>
+            {showLibraryLink && (
+              <Link to="/library" className="text-zinc-300 hover:text-red-500 block px-3 py-2 rounded-md text-base font-medium" onClick={() => setIsMobileMenuOpen(false)}>{t.library}</Link>
+            )}
 
-            {/* 3. Planos */}
             <Link to="/subscription" className="text-zinc-300 hover:text-red-500 block px-3 py-2 rounded-md text-base font-medium" onClick={() => setIsMobileMenuOpen(false)}>{t.plans}</Link>
              
-             {/* 4. Contato */}
-             <Link to="/contact" className="text-zinc-300 hover:text-red-500 block px-3 py-2 rounded-md text-base font-medium" onClick={() => setIsMobileMenuOpen(false)}>{t.contact}</Link>
+            <Link to="/contact" className="text-zinc-300 hover:text-red-500 block px-3 py-2 rounded-md text-base font-medium" onClick={() => setIsMobileMenuOpen(false)}>{t.contact}</Link>
             
-            {/* 5. Configurações (Admin) */}
             {user?.role === 'admin' && (
               <Link to="/admin/settings" className="text-red-400 hover:text-red-300 block px-3 py-2 rounded-md text-base font-medium" onClick={() => setIsMobileMenuOpen(false)}>{t.settings}</Link>
             )}

@@ -18,16 +18,24 @@ const Home: React.FC = () => {
     });
   }, [games, searchQuery, selectedCategory]);
 
+  const featuredGames = useMemo(() => {
+    const featured = games.filter(g => g.isFeatured);
+    return featured.length > 0 ? featured : games.slice(0, 3);
+  }, [games]);
+
   const myGames = user ? games.filter(g => user.library.includes(g.id)) : [];
+
+  // Regra de visibilidade da biblioteca na home: Se tiver jogos OU se for Administrador
+  const showLibrarySection = user && (myGames.length > 0 || user.role === 'admin') && !searchQuery && selectedCategory === 'Todos';
 
   return (
     <div className="min-h-screen pb-20">
-      <HeroCarousel games={games} />
+      <HeroCarousel games={featuredGames} />
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-20 relative z-20">
         
         {/* User Library Section */}
-        {user && myGames.length > 0 && !searchQuery && selectedCategory === 'Todos' && (
+        {showLibrarySection && (
           <div className="mb-12 animate-fade-in-up">
             <div className="bg-gradient-to-r from-zinc-900 to-black rounded-2xl p-6 border border-zinc-800 shadow-xl">
                <div className="flex items-center justify-between mb-6">
@@ -37,14 +45,14 @@ const Home: React.FC = () => {
                    </div>
                    <div>
                      <h2 className="text-2xl font-bold text-white">Sua Biblioteca</h2>
-                     <p className="text-zinc-400 text-sm">Continue de onde parou</p>
+                     <p className="text-zinc-400 text-sm">{user.role === 'admin' ? 'Acesso Administrativo' : 'Continue de onde parou'}</p>
                    </div>
                  </div>
                  <Link to="/library" className="text-sm text-red-500 hover:text-red-400 font-medium">Ver todos</Link>
                </div>
                
                <div className="flex space-x-4 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-zinc-700 scrollbar-track-transparent">
-                  {myGames.slice(0, 4).map(game => (
+                  {myGames.length > 0 ? myGames.slice(0, 4).map(game => (
                     <div key={game.id} className="flex-shrink-0 w-64 group relative rounded-xl overflow-hidden aspect-video border border-zinc-800">
                        <img src={game.banner} alt={game.title} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center">
@@ -54,7 +62,11 @@ const Home: React.FC = () => {
                           <span className="text-white font-bold text-sm">{game.title}</span>
                        </div>
                     </div>
-                  ))}
+                  )) : (
+                    <div className="flex-shrink-0 w-full py-10 text-center border border-dashed border-zinc-800 rounded-xl">
+                       <p className="text-zinc-500 text-sm">Sua biblioteca administrativa está vazia. Adicione jogos para testar.</p>
+                    </div>
+                  )}
                </div>
             </div>
           </div>
@@ -67,7 +79,6 @@ const Home: React.FC = () => {
                <Filter className="w-5 h-5 text-red-500" />
                <span className="font-bold text-lg">Explorar</span>
             </div>
-            {/* Horizontal Categories for everyone now */}
             <div className="flex flex-wrap gap-2 justify-center md:justify-end">
               {CATEGORIES.slice(0, 8).map(cat => (
                 <button

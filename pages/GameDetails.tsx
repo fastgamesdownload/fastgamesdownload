@@ -1,7 +1,7 @@
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
-import { ShoppingCart, Star, Calendar, ShieldCheck, Download, Youtube, Monitor, Image as ImageIcon } from 'lucide-react';
+import { ShoppingCart, Star, Calendar, ShieldCheck, Download, Youtube, Monitor, Image as ImageIcon, Cpu, Package } from 'lucide-react';
 
 const GameDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -11,38 +11,57 @@ const GameDetails: React.FC = () => {
   const game = games.find(g => g.id === id);
   const isInCart = cart.some(item => item.id === game?.id);
   const isOwned = user?.library.includes(game?.id || '');
+  const isDigital = game?.mediaType === 'Digital';
+  
+  // Regra: Premium/VIP, se já possuir o jogo OU se for Administrador pode baixar diretamente
+  const canDownloadDirectly = isDigital && (
+    user?.status === 'Premium' || 
+    user?.status === 'VIP' || 
+    user?.role === 'admin' || 
+    isOwned
+  );
 
   if (!game) {
     return <div className="text-center py-20 text-white">Jogo não encontrado</div>;
   }
 
   const handleAction = () => {
-    if (isOwned) {
-       alert("Iniciando download...");
+    if (canDownloadDirectly) {
+      if (game.downloadUrl) {
+        window.open(game.downloadUrl, '_blank');
+      } else {
+        alert(`O link de download para "${game.title}" ainda não está disponível.`);
+      }
     } else if (isInCart) {
       navigate('/cart');
     } else {
       addToCart({
         id: game.id,
         name: game.title,
-        price: game.price,
+        price: isDigital ? 0 : game.price,
         type: 'game',
         image: game.image
       });
     }
   };
 
-  const getYoutubeEmbedUrl = (url: string) => {
-    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
-    const match = url.match(regExp);
-    return (match && match[2].length === 11) ? `https://www.youtube.com/embed/${match[2]}` : null;
+  const getYoutubeEmbedUrl = (input: string) => {
+    if (!input) return null;
+    if (/^[a-zA-Z0-9_-]{11}$/.test(input)) {
+      return `https://www.youtube.com/embed/${input}?rel=0&enablejsapi=1`;
+    }
+    const regExp = /^.*(?:youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+    const match = input.match(regExp);
+    if (match && match[1].length === 11) {
+      return `https://www.youtube.com/embed/${match[1]}?rel=0&enablejsapi=1`;
+    }
+    return null;
   };
 
   const embedUrl = game.videoUrl ? getYoutubeEmbedUrl(game.videoUrl) : null;
 
   return (
     <div className="min-h-screen bg-zinc-950 pb-20">
-      {/* Banner */}
       <div className="h-[400px] w-full relative">
         <img src={game.banner} alt={game.title} className="w-full h-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/50 to-transparent" />
@@ -51,7 +70,6 @@ const GameDetails: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-32 relative z-10">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           
-          {/* Left Column: Cover & Stats */}
           <div className="md:col-span-1">
              <div className="rounded-xl overflow-hidden shadow-2xl shadow-red-900/20 border-4 border-zinc-800 mb-6">
                 <img src={game.image} alt={game.title} className="w-full aspect-[3/4] object-cover" />
@@ -67,6 +85,15 @@ const GameDetails: React.FC = () => {
                    <span className="text-white font-bold">{game.platform}</span>
                 </div>
                 <div className="flex justify-between items-center text-zinc-400 text-sm border-b border-zinc-800 pb-2">
+                   <span className="flex items-center">
+                     {isDigital ? <Cpu className="w-4 h-4 mr-2 text-blue-500" /> : <Package className="w-4 h-4 mr-2 text-red-500" />} 
+                     Mídia
+                   </span>
+                   <span className={`font-bold ${isDigital ? 'text-blue-500' : 'text-red-500'}`}>
+                     {game.mediaType || 'Física'}
+                   </span>
+                </div>
+                <div className="flex justify-between items-center text-zinc-400 text-sm border-b border-zinc-800 pb-2">
                    <span className="flex items-center"><Calendar className="w-4 h-4 mr-2" /> Lançamento</span>
                    <span className="text-white">{new Date(game.releaseDate).toLocaleDateString()}</span>
                 </div>
@@ -77,7 +104,6 @@ const GameDetails: React.FC = () => {
              </div>
           </div>
 
-          {/* Right Column: Details & Buy */}
           <div className="md:col-span-2 pt-10 md:pt-32">
              <div className="flex flex-wrap items-center gap-3 mb-4">
                 {game.tags.map(tag => (
@@ -89,30 +115,28 @@ const GameDetails: React.FC = () => {
              
              <div className="prose prose-invert max-w-none mb-8 text-zinc-300 leading-relaxed">
                <p>{game.description}</p>
-               <p>Mergulhe nesta experiência única com gráficos de última geração e jogabilidade fluida. O Fastgames Download garante servidores de alta velocidade para que você comece a jogar em minutos.</p>
              </div>
 
-             {/* Video Section */}
              {embedUrl && (
-               <div className="mb-8">
+               <div className="mb-8 animate-fade-in">
                  <h3 className="text-xl font-bold text-white mb-4 flex items-center">
                     <Youtube className="mr-2 text-red-600" /> Trailer
                  </h3>
-                 <div className="aspect-video w-full rounded-xl overflow-hidden shadow-xl border border-zinc-800">
+                 <div className="aspect-video w-full rounded-xl overflow-hidden shadow-xl border border-zinc-800 bg-black">
                     <iframe 
                       width="100%" 
                       height="100%" 
                       src={embedUrl} 
-                      title="YouTube video player" 
+                      title={`${game.title} Trailer`} 
                       frameBorder="0" 
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
                       allowFullScreen
+                      className="w-full h-full"
                     ></iframe>
                  </div>
                </div>
              )}
              
-             {/* Screenshots Gallery */}
              {game.screenshots && game.screenshots.length > 0 && (
                <div className="mb-8">
                  <h3 className="text-xl font-bold text-white mb-4 flex items-center">
@@ -134,26 +158,28 @@ const GameDetails: React.FC = () => {
 
              <div className="bg-zinc-900/50 p-6 rounded-2xl border border-zinc-800 backdrop-blur-sm flex flex-col sm:flex-row items-center justify-between gap-6">
                 <div>
-                  <p className="text-zinc-400 text-sm mb-1">Preço Atual</p>
-                  <p className="text-4xl font-bold text-white">{game.price === 0 ? 'Grátis' : formatPrice(game.price)}</p>
+                  <p className="text-zinc-400 text-sm mb-1">{isDigital ? 'Acesso ao Conteúdo' : 'Preço de Aquisição'}</p>
+                  <p className="text-4xl font-bold text-white">
+                    {canDownloadDirectly ? 'Liberado' : isDigital ? 'Acesso Premium' : game.price === 0 ? 'Grátis' : formatPrice(game.price)}
+                  </p>
                 </div>
 
                 <button 
                   onClick={handleAction}
                   className={`px-8 py-4 rounded-xl font-bold text-lg flex items-center transition-all transform hover:scale-105 shadow-xl ${
-                    isOwned 
+                    canDownloadDirectly 
                     ? 'bg-blue-600 hover:bg-blue-700 text-white'
                     : isInCart 
                       ? 'bg-green-600 hover:bg-green-700 text-white' 
                       : 'bg-red-600 hover:bg-red-700 text-white'
                   }`}
                 >
-                  {isOwned ? (
-                    <><Download className="w-6 h-6 mr-3" /> Instalar Agora</>
+                  {canDownloadDirectly ? (
+                    <><Download className="w-6 h-6 mr-3" /> Baixar Agora</>
                   ) : isInCart ? (
                     <><ShoppingCart className="w-6 h-6 mr-3" /> Ver no Carrinho</>
                   ) : (
-                    <><ShoppingCart className="w-6 h-6 mr-3" /> Adicionar ao Carrinho</>
+                    <><ShoppingCart className="w-6 h-6 mr-3" /> {isDigital ? 'Adicionar ao Carrinho' : 'Comprar Jogo'}</>
                   )}
                 </button>
              </div>

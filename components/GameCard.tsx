@@ -1,6 +1,6 @@
 import React from 'react';
 import { Game } from '../types';
-import { Star, ShoppingBag } from 'lucide-react';
+import { Star, ShoppingBag, Download } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
 
@@ -9,20 +9,39 @@ interface GameCardProps {
 }
 
 const GameCard: React.FC<GameCardProps> = ({ game }) => {
-  const { addToCart, cart, formatPrice } = useStore();
+  const { addToCart, cart, formatPrice, user } = useStore();
   const isInCart = cart.some(item => item.id === game.id);
+  const isDigital = game.mediaType === 'Digital';
+  const isOwned = user?.library.includes(game.id);
+  
+  // Regra: Premium/VIP, se já possuir o jogo OU se for Administrador pode baixar diretamente
+  const canDownloadDirectly = isDigital && (
+    user?.status === 'Premium' || 
+    user?.status === 'VIP' || 
+    user?.role === 'admin' || 
+    isOwned
+  );
 
-  const handleAddToCart = (e: React.MouseEvent) => {
+  const handleAction = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!isInCart) {
-      addToCart({
-        id: game.id,
-        name: game.title,
-        price: game.price,
-        type: 'game',
-        image: game.image
-      });
+    
+    if (canDownloadDirectly) {
+      if (game.downloadUrl) {
+        window.open(game.downloadUrl, '_blank');
+      } else {
+        alert(`O link de download para "${game.title}" ainda não está disponível.`);
+      }
+    } else {
+      if (!isInCart) {
+        addToCart({
+          id: game.id,
+          name: game.title,
+          price: isDigital ? 0 : game.price,
+          type: 'game',
+          image: game.image
+        });
+      }
     }
   };
 
@@ -36,20 +55,35 @@ const GameCard: React.FC<GameCardProps> = ({ game }) => {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-80 group-hover:opacity-100 transition-opacity" />
         
-        {/* Hover Action Overlay */}
         <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
            <button 
-             onClick={handleAddToCart}
-             className={`px-6 py-3 rounded-full font-bold flex items-center shadow-lg transition-transform transform hover:scale-105 ${isInCart ? 'bg-green-600 text-white' : 'bg-red-600 text-white hover:bg-red-700'}`}
+             onClick={handleAction}
+             className={`px-6 py-3 rounded-full font-bold flex items-center shadow-lg transition-transform transform hover:scale-105 ${
+               canDownloadDirectly 
+               ? 'bg-blue-600 text-white hover:bg-blue-700' 
+               : isInCart 
+                 ? 'bg-green-600 text-white' 
+                 : 'bg-red-600 text-white hover:bg-red-700'
+             }`}
            >
-             <ShoppingBag className="w-5 h-5 mr-2" />
-             {isInCart ? 'No Carrinho' : 'Comprar'}
+             {canDownloadDirectly ? (
+               <><Download className="w-5 h-5 mr-2" /> Baixar Agora</>
+             ) : (
+               <>
+                 <ShoppingBag className="w-5 h-5 mr-2" />
+                 {isInCart ? 'No Carrinho' : 'Adicionar'}
+               </>
+             )}
            </button>
         </div>
 
         <div className="absolute top-3 right-3 bg-black/60 backdrop-blur px-2 py-1 rounded text-yellow-400 flex items-center text-xs font-bold">
           <Star className="w-3 h-3 mr-1 fill-current" />
           {game.rating}
+        </div>
+
+        <div className={`absolute top-3 left-3 backdrop-blur px-2 py-1 rounded text-white text-[10px] font-black uppercase tracking-tighter shadow-lg ${isDigital ? 'bg-blue-600/90' : 'bg-red-600/90'}`}>
+          {game.mediaType || 'Física'}
         </div>
       </div>
 
@@ -59,7 +93,9 @@ const GameCard: React.FC<GameCardProps> = ({ game }) => {
         </div>
         <div className="flex justify-between items-center mt-3">
            <span className="text-xs text-zinc-400 bg-zinc-800 px-2 py-1 rounded uppercase tracking-wider">{game.category}</span>
-           <span className="text-lg font-bold text-white">{game.price === 0 ? 'Grátis' : formatPrice(game.price)}</span>
+           <span className="text-lg font-bold text-white">
+             {isDigital ? (canDownloadDirectly ? 'Liberado' : 'Acesso Premium') : game.price === 0 ? 'Grátis' : formatPrice(game.price)}
+           </span>
         </div>
       </div>
     </Link>

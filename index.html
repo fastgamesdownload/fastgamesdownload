@@ -1,89 +1,69 @@
 <!DOCTYPE html>
-<html lang="pt-BR" class="bg-zinc-950">
+<html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Fastgames Download | Premium Gaming Experience</title>
-    
-    <!-- Tailwind Compiled Styles -->
-    <link href="/dist/output.css" rel="stylesheet">
-    
-    <!-- Premium Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    
+    <title>Fastgames Download</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: {
+                DEFAULT: '#DC2626', // Red-600
+                dark: '#B91C1C', // Red-700
+                light: '#EF4444', // Red-500
+              },
+              dark: {
+                DEFAULT: '#18181B', // Zinc-950
+                surface: '#27272A', // Zinc-900
+                lighter: '#3F3F46', // Zinc-700
+              }
+            },
+            fontFamily: {
+              sans: ['Inter', 'sans-serif'],
+            }
+          }
+        }
+      }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
     <style>
-      /* Splash Screen Loader Styles */
-      #initial-loader {
-        position: fixed;
-        inset: 0;
-        background: #09090b;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        z-index: 9999;
-        transition: opacity 0.5s ease-out;
-      }
-      .loader-logo {
+      body {
         font-family: 'Inter', sans-serif;
-        font-weight: 900;
-        font-size: 2rem;
-        color: #fff;
-        letter-spacing: -0.05em;
-        margin-bottom: 1rem;
+        background-color: #09090b; /* Zinc-950 equivalent */
+        color: #f4f4f5;
       }
-      .loader-logo span { color: #dc2626; }
-      .loader-bar {
-        width: 120px;
-        height: 2px;
-        background: #18181b;
+      /* Custom Scrollbar */
+      ::-webkit-scrollbar {
+        width: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #18181b; 
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #dc2626; 
         border-radius: 4px;
-        overflow: hidden;
       }
-      .loader-progress {
-        width: 40%;
-        height: 100%;
-        background: #dc2626;
-        animation: loading 1.5s infinite ease-in-out;
-      }
-      @keyframes loading {
-        0% { transform: translateX(-100%); }
-        100% { transform: translateX(250%); }
-      }
-      body.loaded #initial-loader {
-        opacity: 0;
-        pointer-events: none;
+      ::-webkit-scrollbar-thumb:hover {
+        background: #b91c1c; 
       }
     </style>
-
-    <script type="importmap">
-    {
-      "imports": {
-        "react-router-dom": "https://esm.sh/react-router-dom@^7.10.1",
-        "react/": "https://esm.sh/react@^19.2.1/",
-        "react": "https://esm.sh/react@^19.2.1",
-        "react-dom/": "https://esm.sh/react-dom@^19.2.1/",
-        "lucide-react": "https://esm.sh/lucide-react@^0.560.0",
-        "@vercel/analytics": "https://esm.sh/@vercel/analytics"
-      }
-    }
-    </script>
-  </head>
-  <body class="bg-zinc-950 text-zinc-100 font-sans antialiased">
-    <div id="initial-loader">
-      <div class="loader-logo">FAST<span>GAMES</span></div>
-      <div class="loader-bar"><div class="loader-progress"></div></div>
-    </div>
-    
+  <script type="importmap">
+{
+  "imports": {
+    "react-router-dom": "https://esm.sh/react-router-dom@^7.10.1",
+    "react/": "https://esm.sh/react@^19.2.1/",
+    "react": "https://esm.sh/react@^19.2.1",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.1/",
+    "lucide-react": "https://esm.sh/lucide-react@^0.560.0",
+    "@vercel/analytics": "https://esm.sh/@vercel/analytics"
+  }
+}
+</script>
+</head>
+  <body>
     <div id="root"></div>
-
-    <script>
-      // Remove loader after app mounts
-      window.addEventListener('load', () => {
-        document.body.classList.add('loaded');
-      });
-    </script>
   </body>
 </html>

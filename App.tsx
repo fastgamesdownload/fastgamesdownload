@@ -1,5 +1,6 @@
 import React from 'react';
 import { HashRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { Analytics } from '@vercel/analytics/react';
 import { StoreProvider } from './context/StoreContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
@@ -52,6 +53,7 @@ const App: React.FC = () => {
             </Routes>
           </div>
           <Footer />
+          <Analytics />
         </div>
       </Router>
     </StoreProvider>

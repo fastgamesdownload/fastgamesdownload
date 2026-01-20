@@ -2,6 +2,12 @@ import React, { createContext, useContext, useState, ReactNode, useEffect } from
 import { CartItem, Game, User } from '../types';
 import { GAMES } from '../constants';
 
+interface Notification {
+  id: string;
+  message: string;
+  type: 'success' | 'error' | 'info';
+}
+
 interface StoreContextType {
   cart: CartItem[];
   addToCart: (item: CartItem) => void;
@@ -24,6 +30,8 @@ interface StoreContextType {
   formatPrice: (value: number) => string;
   importDatabase: (data: { games: Game[], clients: User[] }) => boolean;
   resetToDefaults: () => void;
+  notifications: Notification[];
+  removeNotification: (id: string) => void;
 }
 
 const StoreContext = createContext<StoreContextType | undefined>(undefined);
@@ -60,8 +68,8 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const [user, setUser] = useState<User | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [language, setLanguage] = useState<'pt' | 'en' | 'es'>('pt');
+  const [notifications, setNotifications] = useState<Notification[]>([]);
 
-  // Sync automatic updates
   useEffect(() => {
     localStorage.setItem(STORAGE_GAMES_KEY, JSON.stringify(games));
   }, [games]);
@@ -75,16 +83,29 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     if (admin) setUser(admin);
   }, [clients]);
 
+  const addNotification = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
+    const id = Date.now().toString();
+    setNotifications(prev => [...prev, { id, message, type }]);
+    setTimeout(() => removeNotification(id), 5000);
+  };
+
+  const removeNotification = (id: string) => {
+    setNotifications(prev => prev.filter(n => n.id !== id));
+  };
+
   const addGame = (newGame: Game) => {
     setGames((prev) => [newGame, ...prev]);
+    addNotification(`Jogo "${newGame.title}" adicionado ao catálogo!`, 'success');
   };
 
   const updateGame = (updatedGame: Game) => {
     setGames((prev) => prev.map(g => g.id === updatedGame.id ? updatedGame : g));
+    addNotification(`Jogo "${updatedGame.title}" atualizado.`, 'info');
   };
 
   const deleteGame = (gameId: string) => {
     setGames((prev) => prev.filter(g => g.id !== gameId));
+    addNotification(`Produto removido do sistema.`, 'info');
   };
 
   const updateClient = (userId: string, updates: Partial<User>) => {
@@ -99,7 +120,6 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
   const importDatabase = (data: { games: Game[], clients: User[] }): boolean => {
     try {
-      // Limpeza prévia para evitar conflitos de espaço no LocalStorage
       localStorage.removeItem(STORAGE_GAMES_KEY);
       localStorage.removeItem(STORAGE_USERS_KEY);
 
@@ -112,12 +132,10 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         localStorage.setItem(STORAGE_USERS_KEY, JSON.stringify(data.clients));
         setClients(data.clients);
       }
-      
+      addNotification("Banco de dados restaurado com sucesso.", "success");
       return true;
     } catch (error) {
-      console.error("Erro ao importar banco de dados:", error);
-      // Se falhar (ex: QuotaExceeded), tentamos restaurar o mínimo possível
-      alert("Erro de Armazenamento: O arquivo de backup é muito grande para este navegador (LocalStorage cheio). Tente remover algumas capturas de tela Base64 do JSON antes de restaurar.");
+      addNotification("Erro crítico na importação.", "error");
       return false;
     }
   };
@@ -133,6 +151,7 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const addToCart = (item: CartItem) => {
     setCart((prev) => {
       if (prev.find((i) => i.id === item.id)) return prev;
+      addNotification(`${item.name} adicionado ao carrinho!`, 'success');
       return [...prev, item];
     });
   };
@@ -160,6 +179,7 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
           });
           updateClient(user.id, { library: newLibrary, isSubscribed: newSubStatus });
           clearCart();
+          addNotification("Transação concluída! Acesso liberado.", "success");
         }
         resolve();
       }, 1000);
@@ -178,9 +198,24 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       searchQuery, setSearchQuery,
       language, setLanguage,
       clients, updateClient, deleteClient,
-      formatPrice, importDatabase, resetToDefaults
+      formatPrice, importDatabase, resetToDefaults,
+      notifications, removeNotification
     }}>
       {children}
+      
+      {/* Toast Notification Container */}
+      <div className="fixed bottom-8 right-8 z-[100] space-y-3">
+         {notifications.map(n => (
+           <div key={n.id} className={`flex items-center p-4 rounded-2xl shadow-2xl border backdrop-blur-xl animate-fade-in-up transition-all ${
+             n.type === 'success' ? 'bg-green-600/20 border-green-500/30 text-green-400' : 
+             n.type === 'error' ? 'bg-red-600/20 border-red-500/30 text-red-400' :
+             'bg-zinc-900/80 border-white/10 text-white'
+           }`}>
+             <span className="text-sm font-bold tracking-tight">{n.message}</span>
+             <button onClick={() => removeNotification(n.id)} className="ml-4 text-xs opacity-50 hover:opacity-100 uppercase font-black">OK</button>
+           </div>
+         ))}
+      </div>
     </StoreContext.Provider>
   );
 };
